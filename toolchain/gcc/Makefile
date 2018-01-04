@@ -21,11 +21,13 @@ TARGET_CFLAGS:=		$(filter-out -msep-data,$(TARGET_CFLAGS))
 TARGET_CXXFLAGS:=	$(filter-out -msep-data,$(TARGET_CXXFLAGS))
 endif
 
+ifeq ($(ADK_TARGET_USE_STATIC_AND_SHARED_LIBS),y)
 TARGET_CFLAGS:=		$(filter-out -static,$(TARGET_CFLAGS))
 TARGET_CXXFLAGS:=	$(filter-out -static,$(TARGET_CXXFLAGS))
+endif
 
 GCC_CONFOPTS:=		--prefix=$(TOOLCHAIN_DIR)/usr \
-			--with-bugurl="http://www.openadk.org/" \
+			--with-bugurl="$(ADK_VENDOR_URL)" \
 			--build=$(GNU_HOST_NAME) \
 			--host=$(GNU_HOST_NAME) \
 			--target=$(GNU_TARGET_NAME) \
@@ -122,7 +124,11 @@ GCC_CONFOPTS+=		--disable-symvers
 endif
 
 ifeq ($(ADK_TARGET_ARCH_CSKY),y)
+ifeq ($(ADK_TARGET_CPU_CSKY_CK610),y)
 GCC_CONFOPTS+=		--with-cskyabi=abiv1
+else
+GCC_CONFOPTS+=		--with-cskyabi=abiv2
+endif
 endif
 
 ifeq ($(ADK_TARGET_ARCH_METAG),y)
@@ -207,6 +213,10 @@ endif
 
 ifneq ($(ADK_TARGET_MIPS_ABI),)
 GCC_CONFOPTS+=		--with-abi=${ADK_TARGET_MIPS_ABI}
+endif
+
+ifneq ($(ADK_TARGET_ABI_RISCV),)
+GCC_CONFOPTS+=		--with-abi=${ADK_TARGET_ABI_RISCV}
 endif
 
 ifeq (${ADK_MAKE_PARALLEL},y)
@@ -350,8 +360,6 @@ $(WRKBUILD)/.final:
 ifeq ($(ADK_TARGET_CPU_CF),y)
 	find $(STAGING_TARGET_DIR) -name libgcc.a -print | while read t; do $(GNU_TARGET_NAME)-ar dv "$t" _ctors.o; done
 endif
-	# remove any libiberty.a, breaking package/binutils later
-	-rm $(STAGING_TARGET_DIR)/usr/lib/libiberty.a
 	# cleanup unneeded docs
 	rm -rf $(TOOLCHAIN_DIR)/usr/share
 	# cleanup unneeded libtool files

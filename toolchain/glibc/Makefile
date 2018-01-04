@@ -6,10 +6,10 @@ include ../rules.mk
 include Makefile.inc
 include ${ADK_TOPDIR}/mk/buildhlp.mk
 
-ifneq ($(ADK_DEBUG),)
-GLIBC_FLAGS:=		-O2 -g3
-else
-GLIBC_FLAGS:=		-O2
+# glibc does not compile with Os and CPU specific FLAGS for m68k/x86_64
+ifeq ($(ADK_TARGET_ARCH_X86_64)$(ADK_TARGET_ARCH_M68K),y)
+TARGET_CFLAGS:=		-O2
+TARGET_CXXFLAGS:=	-O2
 endif
 
 GLIBC_CONFOPTS:=	--build=$(GNU_HOST_NAME) \
@@ -41,8 +41,8 @@ endif
 
 GLIBC_ENV:=             PATH='${TARGET_PATH}' \
                         BUILD_CC=${CC_FOR_BUILD} \
-                        CFLAGS="$(GLIBC_FLAGS)" \
-                        CXXFLAGS="$(GLIBC_FLAGS)" \
+                        CFLAGS="$(TARGET_CFLAGS)" \
+                        CXXFLAGS="$(TARGET_CXXFLAGS)" \
                         CC="${TARGET_CC}" \
                         CXX="${TARGET_CXX}" \
                         AR="${TARGET_AR}" \
